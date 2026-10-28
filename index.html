@@ -183,6 +183,7 @@ window.dash = (() => {
   <section class="nj-page" id="power"><h2 class="nj-static-h">All-time rankings</h2>
     <div class="nj-controls">
       <select id="pw-window" aria-label="Seasons"><option value="all">All-time</option><option value="5">Last 5 seasons</option></select>
+      <select id="pw-mode" aria-label="View"><option value="total">Career totals</option><option value="per">Average per season</option></select>
       <label class="nj-toggle"><input type="checkbox" class="cur-only" id="cur-pow"> Current owners only</label>
     </div>
     <p class="nj-lead" id="pw-lead">Stephen Moss is #1 all-time (2004–2025), ahead of Jason Needles and Jacob Hare.</p>
@@ -649,6 +650,7 @@ function rankPower(rows, upTo, keep) {
     .map((o, i) => ({...o, rank: i + 1}));
 }
 $('#pw-window').addEventListener('change', (e) => { POW.window = e.target.value; draw(); });
+$('#pw-mode').addEventListener('change', (e) => { POW.mode = e.target.value; draw(); });
 
 function powerChart(ranked) {
   const el = $('#power-chart'); if (failBox(el, 'powerSeasons')) return;
@@ -828,8 +830,8 @@ function draw() {
   }
 
   if (TAB === 'power') {
-    $('#pw-window').value = POW.window;
-    $('#pw-title').textContent = POW.window === 'all' ? 'All-time rankings' : 'Rankings: last ' + POW.window + ' seasons';
+    $('#pw-window').value = POW.window; $('#pw-mode').value = POW.mode;
+    $('#pw-title').textContent = (POW.window === 'all' ? 'All-time rankings' : 'Rankings: last ' + POW.window + ' seasons') + (POW.mode === 'per' ? ', average per season' : '');
     const rows = rowsOf('powerSeasons');
     const cur = new Set(rowsOf('careers').filter((c) => c.current === 'Yes').map((c) => c.owner));
     const keep = (o) => !p.current || cur.has(o);
@@ -842,6 +844,7 @@ function draw() {
     $('#pw-note').textContent = 'Score = ' + w.title + ' per title + ' + w.runner_up + ' per runner-up + ' + w.third + ' per 3rd place + ' + w.playoff +
       ' per playoff appearance + ' + w.netwin + ' per net win (W − L) + ' + w.pts + ' per 100 points scored above that season\u2019s league average. ' +
       'Title, runner-up and 3rd place points follow the league payout. Completed seasons only; regular-season record and points.' +
+      (per ? ' Average per season = score divided by seasons played in the window; owners need 3+ seasons to qualify.' : '') +
       ' Move = change from the same ranking through ' + (last - 1) + '.';
     const tb = $('#power-table tbody');
     tb.replaceChildren(...ranked.map((o) => {
